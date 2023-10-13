@@ -1,6 +1,5 @@
 # Justin Ortiz ID: 010164085
 # C950 Task 2.
-# testing changes what the heck
 import csv
 from datetime import *
 
