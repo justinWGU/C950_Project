@@ -1,5 +1,6 @@
 # Justin Ortiz ID: 010164085
 # C950 Task 2.
+
 import csv
 from datetime import *
 
@@ -16,16 +17,6 @@ class ChainingHashTable:
             self.table.append([])
 
     # Inserts a new item into the hash table.
-    ''' 
-    #Original
-    def insert(self, item):
-        # get the bucket list where this item will go.
-        bucket = hash(item) % len(self.table)
-        bucket_list = self.table[bucket]
-
-        # insert the item to the end of the bucket list.
-        bucket_list.append(item)
-    '''
 
     def insert(self, key, item):  # does both insert and update
         # get the bucket list where this item will go.
@@ -89,9 +80,7 @@ class Package:  # creation of Package object
         self.time_delivered = None
         self.departure_time = None
 
-
     # programs how package instance is printed to show each of its attributes
-
     def __str__(self):
         return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {self.status}'
 
@@ -101,7 +90,8 @@ class Package:  # creation of Package object
             calculated_status = 'Delivered'
         elif user_time < self.departure_time:
             calculated_status = 'At hub'
-        return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {calculated_status}'
+        return f'Status: {calculated_status}'
+       # return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {calculated_status}'
 
 
 # function to open and read package data file
@@ -153,11 +143,12 @@ address_data = []
 # Export to another file
 # Truck object creation
 class Truck:
-    def __init__(self, packages):
+    def __init__(self):
         self.current_location = '4001 South 700 East'
-        self.packages = packages
+        self.packages = []
         self.total_miles = 0
-        self.departure_time = timedelta(hours=8)
+        #self.departure_time = timedelta(hours=8)
+        self.departure_time = timedelta()
         self.current_time = self.departure_time
         self.delayed_packages = []
 
@@ -194,49 +185,62 @@ def min_distance_address_from(from_address, truck):
     return min, min_ID, min_address
 
 
-# removes the delayed packages from truck pacakge list
+# loads packages based on constraints then heuristically
 
 
-def remove_delayed_pkg(truck):
-    for j in truck.delayed_packages:
-        truck.packages.remove(j)
-    return truck.packages
+used_packages = [] # list to keep track of packages already in use
+free_packages = [1, 2, 4, 5, 7, 8, 10, 11, 12, 17, 21, 22, 23, 24, 26, 27, 29, 30, 31, 33, 34, 35, 37, 39, 40] # list of packages that have no constraints
 
 
-# updates the status of all packages on truck at that time to 'out for delivery'
+def load_truck(truck):
+    if truck == truck2:
+        mandatory_pkgs = [3, 18, 36, 38] # list of packages that must go on truck 2
+        while len(mandatory_pkgs) != 0:
+            dist = min_distance_address_from(truck.current_location, mandatory_pkgs) # dist equals package ID with min distance
+            mandatory_pkgs.remove(dist[1]) # remove package from mandatory truck list
+            truck2.packages.append(dist[1]) # add to truck list
+    elif truck == truck1:
+        mandatory_pkgs = [13, 14, 15, 16, 19, 20] # list of packages that must go on the same truck
+        while len(mandatory_pkgs) != 0:
+            dist = min_distance_address_from(truck.current_location, mandatory_pkgs)  # dist equals package ID with min distance
+            mandatory_pkgs.remove(dist[1])  # remove package from mandatory truck list
+            truck1.packages.append(dist[1])  # add to truck list
+    elif truck == truck3:
+        mandatory_pkgs = [6, 9, 25, 28, 32] # list of packages that must leave at 905am plus delayed package # 9
+        while len(mandatory_pkgs) != 0:
+            dist = min_distance_address_from(truck.current_location, mandatory_pkgs)  # dist equals package ID with min distance
+            mandatory_pkgs.remove(dist[1])  # remove package from mandatory truck list
+            truck3.packages.append(dist[1])  # add to truck list
+
+    # removes package from free packages that is already in use
+    for i in used_packages:
+        if i in free_packages:
+            free_packages.remove(i)
+
+    # while truck has max 16 packages and free package is list is not empty
+    while len(truck.packages) <= 15 and len(free_packages) != 0:
+        dist = min_distance_address_from(truck.current_location, free_packages)  # dist equals package ID with min distance
+        free_packages.remove(dist[1]) # removed package from free package list
+        used_packages.append(dist[1]) # add package to used list
+        truck.packages.append(dist[1])  # add to truck list
 
 
-#def out_for_delivery(truck):
- #   for i in truck.packages:
-  #      pkg = my_hash.search(i)
-   #     pkg.status = 'En route'
-    #    pkg.departure_time = truck.departure_time
+# updates the status of all packages on truck at that time to 'en route'
 
-# updates status of delivered packages
+def out_for_delivery(truck):
+    # sets departure time of trucks
+    if truck == truck3:
+        truck.departure_time = timedelta(hours=9, minutes=5)
+    else:
+        truck.departure_time = timedelta(hours=8, minutes=0)
 
+    # adjusts current time of trucks to departure time
+    truck.current_time = truck.departure_time
 
-def package_delivered(pkg_id, del_time):  # pkg Id & delivery time
-    package = my_hash.search(pkg_id)
-    package.status = f'Package delivered at {del_time}.'
-    package.time_delivered = del_time
-
-# updates the truck location after every delivery
-
-
-def update_truck_location(truck, destination):  # truck & destination
-    truck.current_location = destination
-
-    return truck.current_location
-
-
-# updates the truck total miles after every delivery
-
-
-def update_truck_miles(truck, destination):  # truck & delivery address
-    distance = float(distance_between(truck.current_location, destination))
-    truck.total_miles += distance
-
-    return truck.total_miles  # returns total distance truck has traveled
+    for i in truck.packages:
+        pkg = my_hash.search(i)
+        pkg.status = 'En route'
+        pkg.departure_time = truck.departure_time
 
 
 # calculates truck's current time
@@ -251,62 +255,38 @@ def calculate_truck_time(truck, distance_traveled):  # distance traveled = dist 
     return truck.current_time
 
 
-# function to change the status of all packages in a truck after they are loaded
-
-
-def load_truck_packages(truck):  # takes truck and changes delivery status of pks to loaded
-    for i in truck.packages:
-        pkg = my_hash.search(i)
-        pkg.status = f'Loaded on {truck}.'
-
-    return 'All packages loaded'
-
-
-# adds the delayed packages back into the truck list once they are ready to be loaded
-
-
-def delayed_pkg(truck):
-    if truck == truck1 and len(truck.packages) == 0:
-        truck.current_time = timedelta(hours=10, minutes=20)
-        next_destination = ['4001 South 700 East', '410 S State St']
-        for i in next_destination:
-            distance = float(distance_between(truck.current_location, i))
-            truck.total_miles += distance
-            truck.current_location = i
-            truck.current_time = calculate_truck_time(truck, distance)
-        pkg = my_hash.search(9)
-        pkg.status = f'Delivered at {truck.current_time}.'
-        for i in truck.delayed_packages:
-            truck.packages.append(i)
-            truck.delayed_packages.remove(i)
-
-
-# function to deliver packages
+# function to deliver packages and update all necessary statuses and mileage
 
 
 def truck_deliver_packages(truck):
-    truck.packages = remove_delayed_pkg(truck)  # calls function to remove delayed pkgs before delivery
-    out_for_delivery(truck)  # calls function to change pkg status to out for delivery
 
-    while len(truck.packages) != 0:
-        next_stop = min_distance_address_from(truck.current_location,
-                                              truck.packages)  # calls algorithm to choose closes next stop to current location
+    # calls function to update pkg status to en route and update departure time
+    out_for_delivery(truck)
+
+    while len(truck.packages) != 0: # while truck is not empty
+        # calls func to choose nearest next stop to current location
+        next_stop = min_distance_address_from(truck.current_location, truck.packages)
         address = next_stop[2]  # address of nearest next location
-        pkg_id = next_stop[1]
+        pkg_id = next_stop[1] # package ID of nearest next location
         dist = next_stop[0]  # min distance between current & next location
-        current_truck_miles = update_truck_miles(truck, address)  # updates truck total miles
-        current_truck_location = update_truck_location(truck, address)  # updates truck location
-        current_time = calculate_truck_time(truck, dist)
-        #if time == 'EOD':
-         #   pass
-        #se:
-         #   if current_time >= time:
-          #      pkg = my_hash.search(pkg_id)
-           #     return f'Package status: {pkg.status}, Current truck time: {truck.current_time}am, Current truck miles: {truck.total_miles}, Current truck location: {truck.current_location}.'
 
-        package_delivered(pkg_id, current_time)
-        truck.packages.remove(pkg_id)  # remove package
-        delayed_pkg(truck)
+        # removes delivered package from truck
+        truck.packages.remove(pkg_id)
+
+        # updates total mileage of truck
+        truck.total_miles += dist
+
+        # updates truck time
+        arrival_time = calculate_truck_time(truck, dist)
+
+        # updates package delivered time
+        my_hash.search(pkg_id).time_delivered = arrival_time
+
+        # updates package status to delivered
+        my_hash.search(pkg_id).status = 'Delivered'
+
+        # updates truck location
+        truck.current_location = address
 
     return f'All packages delivered {truck.current_time}, {truck.total_miles:.2f}, {truck.current_location}.'
 
@@ -326,16 +306,23 @@ load_distance_data('distanceCSV.csv')
 # Pass address csv file as argument to load_address_data function
 load_address_data('addressCSV.csv')
 
-# instantiation of truck 1, 2, and 3
-truck1 = Truck([2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21])
-truck1.delayed_packages = [9]
-truck2 = Truck([1, 3, 6, 17, 18, 25, 28, 29, 31, 32, 34, 36, 38, 40])
-truck2.delayed_packages = [6, 25, 28, 32]
-truck3 = Truck([22, 23, 24, 26, 27, 30, 33, 35, 37, 39])
 
-truck_deliver_packages(truck1)
-truck_deliver_packages(truck2)
-truck_deliver_packages(truck3)
+# instantiation of all three trucks
+truck1 = Truck()
+truck2 = Truck()
+truck3 = Truck()
+
+
+# call function to load trucks
+load_truck(truck1)
+load_truck(truck3)
+load_truck(truck2)
+
+
+# call function to deliver packages
+print(truck_deliver_packages(truck1))
+print(truck_deliver_packages(truck2))
+print(truck_deliver_packages(truck3))
 
 # - - - - - - - - - - - - - - UI section - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -343,14 +330,22 @@ truck_deliver_packages(truck3)
 # prints out prompts
 # print out total truck mileage
 print('Please choose one of the following options: ')
-print(' \'1\' to view all package status at a specified time. ')
-print(' \'2\' to view all truck mileage.')
-print(' \'3\' to view all truck information.') # not sure
+print(' \'1\' to view all package statuses and truck total miles ')
+print(' \'2\' to view all package statuses at a specific time.')
+print(' \'3\' to view a single package at a specific time.')
 print(' \'0\' to exit the program.')
 user = int(input('Enter option: '))
 
 while user != 0:
     if user == 1:
+        for i in range(1, len(my_hash.table)):
+            print(f'Package ID: {my_hash.search(i).ID}, Package status: {my_hash.search(i).status}')
+        print(f'Total truck mileage: truck1: {truck1.total_miles}, truck2: {truck2.total_miles}, truck3: {truck3.total_miles:.1f}')
+        truck_sum = truck1.total_miles + truck2.total_miles + truck3.total_miles
+        print(f'Truck mileage sum: {truck_sum:.2f}')
+        user = 0
+
+    elif user == 2:
         user_hour = int(input('Please enter the hour: '))
         user_minute = int(input('Please enter the minute: '))
         user_time = timedelta(hours=user_hour, minutes=user_minute)
@@ -358,28 +353,22 @@ while user != 0:
             pkg = my_hash.search(9)
             pkg.street = '300 State St'
             pkg.zip = '84103'
-        for i in range(0, len(my_hash.table)):  # index numbers 0 to 39
-            print(my_hash.search(i).print_status(user_time))
+        for i in range(1, len(my_hash.table)):  # index numbers 1 to 39
+            print(f'Package status at {user_time}: {my_hash.search(i).print_status(user_time)}')
         user = 0
-    elif user == 2:
-        truck_deliver_packages(truck1, 'EOD')
-        truck_deliver_packages(truck2, 'EOD')
-        truck_deliver_packages(truck3, 'EOD')
-        for i in range(0, len(my_hash.table)):  # index numbers 0 to 39
-            print('ID: {} and Package: {}'.format(i + 1, my_hash.search(i + 1)))  # print items in hash table
-        user = 0
+
     elif user == 3:
-        print(f'Loaded packages:')
-        print(f'Truck 1: {truck1.packages}')
-        print(f'Truck 2: {truck2.packages}')
-        print(f'Truck 3: {truck3.packages}')
-        truck_deliver_packages(truck1, 'EOD')
-        truck_deliver_packages(truck2, 'EOD')
-        truck_deliver_packages(truck3, 'EOD')
-        print(f'Truck 1 {truck1}')
-        print(f'Truck 2 {truck2}')
-        print(f'Truck 3 {truck3}')
+        user_ID = int(input('Please enter package ID number: '))
+        user_hour = int(input('Please enter the hour: '))
+        user_minute = int(input('Please enter the minute: '))
+        user_time = timedelta(hours=user_hour, minutes=user_minute)
+        if user_time < timedelta(hours=9, minutes=0):
+            pkg = my_hash.search(9)
+            pkg.street = '300 State St'
+            pkg.zip = '84103'
+        print(f'Package status at {user_time}: {my_hash.search(user_ID).print_status(user_time)}')
         user = 0
+
     else:
         user = 0
 
