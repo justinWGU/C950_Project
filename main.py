@@ -16,16 +16,6 @@ class ChainingHashTable:
             self.table.append([])
 
     # Inserts a new item into the hash table.
-    ''' 
-    #Original
-    def insert(self, item):
-        # get the bucket list where this item will go.
-        bucket = hash(item) % len(self.table)
-        bucket_list = self.table[bucket]
-
-        # insert the item to the end of the bucket list.
-        bucket_list.append(item)
-    '''
 
     def insert(self, key, item):  # does both insert and update
         # get the bucket list where this item will go.
@@ -89,20 +79,18 @@ class Package:  # creation of Package object
         self.time_delivered = None
         self.departure_time = None
 
-
     # programs how package instance is printed to show each of its attributes
-
     def __str__(self):
         return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {self.status}'
 
     def print_status(self, user_time):
         calculated_status = 'En route'
         if user_time > self.time_delivered:
-            print(type(self.time_delivered))
             calculated_status = 'Delivered'
         elif user_time < self.departure_time:
             calculated_status = 'At hub'
-        return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {calculated_status}'
+        return f'Status: {calculated_status}'
+       # return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {calculated_status}'
 
 
 # function to open and read package data file
@@ -244,8 +232,10 @@ def out_for_delivery(truck):
         truck.departure_time = timedelta(hours=9, minutes=5)
     else:
         truck.departure_time = timedelta(hours=8, minutes=0)
+
     # adjusts current time of trucks to departure time
     truck.current_time = truck.departure_time
+
     for i in truck.packages:
         pkg = my_hash.search(i)
         pkg.status = 'En route'
@@ -296,7 +286,7 @@ def truck_deliver_packages(truck):
 
         # updates truck location
         truck.current_location = address
-        print(truck.packages)
+
     return f'All packages delivered {truck.current_time}, {truck.total_miles:.2f}, {truck.current_location}.'
 
 
@@ -333,22 +323,28 @@ print(truck_deliver_packages(truck1))
 print(truck_deliver_packages(truck2))
 print(truck_deliver_packages(truck3))
 
-print(truck3.packages)
-print(my_hash.search(9).time_delivered)
 # - - - - - - - - - - - - - - UI section - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # prints out prompts
 # print out total truck mileage
 print('Please choose one of the following options: ')
-print(' \'1\' to view all package status at a specified time. ')
-print(' \'2\' to view all truck mileage.')
-print(' \'3\' to view all truck information.') # not sure
+print(' \'1\' to view all package statuses and truck total miles ')
+print(' \'2\' to view all package statuses at a specific time.')
+print(' \'3\' to view a single package at a specific time.')
 print(' \'0\' to exit the program.')
 user = int(input('Enter option: '))
 
 while user != 0:
     if user == 1:
+        for i in range(1, len(my_hash.table)):
+            print(f'Package ID: {my_hash.search(i).ID}, Package status: {my_hash.search(i).status}')
+        print(f'Total truck mileage: truck1: {truck1.total_miles}, truck2: {truck2.total_miles}, truck3: {truck3.total_miles:.1f}')
+        truck_sum = truck1.total_miles + truck2.total_miles + truck3.total_miles
+        print(f'Truck mileage sum: {truck_sum:.2f}')
+        user = 0
+
+    elif user == 2:
         user_hour = int(input('Please enter the hour: '))
         user_minute = int(input('Please enter the minute: '))
         user_time = timedelta(hours=user_hour, minutes=user_minute)
@@ -357,27 +353,21 @@ while user != 0:
             pkg.street = '300 State St'
             pkg.zip = '84103'
         for i in range(1, len(my_hash.table)):  # index numbers 1 to 39
-            print(my_hash.search(i).print_status(user_time))
+            print(f'Package status at {user_time}: {my_hash.search(i).print_status(user_time)}')
         user = 0
-    elif user == 2:
-        truck_deliver_packages(truck1, 'EOD')
-        truck_deliver_packages(truck2, 'EOD')
-        truck_deliver_packages(truck3, 'EOD')
-        for i in range(0, len(my_hash.table)):  # index numbers 0 to 39
-            print('ID: {} and Package: {}'.format(i + 1, my_hash.search(i + 1)))  # print items in hash table
-        user = 0
+
     elif user == 3:
-        print(f'Loaded packages:')
-        print(f'Truck 1: {truck1.packages}')
-        print(f'Truck 2: {truck2.packages}')
-        print(f'Truck 3: {truck3.packages}')
-        truck_deliver_packages(truck1, 'EOD')
-        truck_deliver_packages(truck2, 'EOD')
-        truck_deliver_packages(truck3, 'EOD')
-        print(f'Truck 1 {truck1}')
-        print(f'Truck 2 {truck2}')
-        print(f'Truck 3 {truck3}')
+        user_ID = int(input('Please enter package ID number: '))
+        user_hour = int(input('Please enter the hour: '))
+        user_minute = int(input('Please enter the minute: '))
+        user_time = timedelta(hours=user_hour, minutes=user_minute)
+        if user_time < timedelta(hours=9, minutes=0):
+            pkg = my_hash.search(9)
+            pkg.street = '300 State St'
+            pkg.zip = '84103'
+        print(f'Package status at {user_time}: {my_hash.search(user_ID).print_status(user_time)}')
         user = 0
+
     else:
         user = 0
 
