@@ -91,10 +91,11 @@ class Package:  # creation of Package object
         elif user_time < self.departure_time:
             calculated_status = 'At hub'
         return f'Status: {calculated_status}'
-       # return f'Package ID: {self.ID}, Address: {self.street} {self.city} {self.state} {self.zip}, Deadline: {self.deadline}, departure time: {self.departure_time}, delivery time: {self.time_delivered}, Weight: {self.weight}lbs, Special instructions: \'{self.special_instructions}\', Delivery status: {calculated_status}'
 
 
 # function to open and read package data file
+
+
 def load_package_data(file_name):
     with open(file_name) as csvfile:
         csv_reader = csv.reader(csvfile, delimiter=',')
@@ -147,7 +148,6 @@ class Truck:
         self.current_location = '4001 South 700 East'
         self.packages = []
         self.total_miles = 0
-        #self.departure_time = timedelta(hours=8)
         self.departure_time = timedelta()
         self.current_time = self.departure_time
         self.delayed_packages = []
@@ -338,8 +338,8 @@ user = int(input('Enter option: '))
 
 while user != 0:
     if user == 1:
-        for i in range(1, len(my_hash.table)):
-            print(f'Package ID: {my_hash.search(i).ID}, Package status: {my_hash.search(i).status}')
+        for i in range(0, len(my_hash.table)):
+            print(f'Package ID: {my_hash.search(i + 1).ID}, Package status: {my_hash.search(i + 1).status} at {my_hash.search(i + 1).time_delivered}')
         print(f'Total truck mileage: truck1: {truck1.total_miles}, truck2: {truck2.total_miles}, truck3: {truck3.total_miles:.1f}')
         truck_sum = truck1.total_miles + truck2.total_miles + truck3.total_miles
         print(f'Truck mileage sum: {truck_sum:.2f}')
@@ -353,8 +353,8 @@ while user != 0:
             pkg = my_hash.search(9)
             pkg.street = '300 State St'
             pkg.zip = '84103'
-        for i in range(1, len(my_hash.table)):  # index numbers 1 to 39
-            print(f'Package status at {user_time}: {my_hash.search(i).print_status(user_time)}')
+        for i in range(0, len(my_hash.table)):
+            print(f'Package status at {user_time}: ID: {my_hash.search(i + 1).ID} {my_hash.search(i + 1).print_status(user_time)}')
         user = 0
 
     elif user == 3:
@@ -371,6 +371,3 @@ while user != 0:
 
     else:
         user = 0
-
-# run trucks before UI
-# del second parameter for truck delivery alg
