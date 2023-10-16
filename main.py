@@ -1,5 +1,6 @@
 # Justin Ortiz ID: 010164085
 # C950 Task 2.
+
 import csv
 from datetime import *
 
