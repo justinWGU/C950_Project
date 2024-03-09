@@ -1,4 +1,4 @@
-# Justin Ortiz ID: 010164085
+# Justin Ortiz
 # C950 Task 2.
 
 import csv
